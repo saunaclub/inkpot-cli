@@ -5,10 +5,10 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"image"
+	"image/color"
 	"image/jpeg"
-	"image/png"
+	_ "image/png"
 	"log"
 	"os"
 
@@ -44,13 +44,13 @@ func init() {
 // Returns a new Rectangle that is resized and centered in `dst`
 func fitRectInto(src *image.Rectangle, dst *image.Rectangle) image.Rectangle {
 	var targetWidth int
-    var targetHeight int
+	var targetHeight int
 	var scale float64
 
 	srcRatio := float64(src.Max.X) / float64(src.Max.Y)
 	dstRatio := float64(dst.Max.X) / float64(dst.Max.Y)
 
-    if srcRatio < dstRatio {
+	if srcRatio < dstRatio {
 		// center horizontally, scale vertically
 		scale = float64(dst.Max.Y) / float64(src.Max.Y)
 	} else {
@@ -64,7 +64,7 @@ func fitRectInto(src *image.Rectangle, dst *image.Rectangle) image.Rectangle {
 	targetX := (dst.Max.X - targetWidth) / 2
 	targetY := (dst.Max.Y - targetHeight) / 2
 
-	return image.Rect(targetX, targetY, targetWidth + targetX, targetHeight + targetY)
+	return image.Rect(targetX, targetY, targetWidth+targetX, targetHeight+targetY)
 }
 
 func convertImage(width int, height int) {
@@ -76,22 +76,33 @@ func convertImage(width int, height int) {
 	defer input.Close()
 
 	// … and writing to a predefined output file
-	output, err := os.OpenFile("cat_resized.png", os.O_RDWR|os.O_CREATE, 0644)
+	output, err := os.OpenFile("cat_resized.epd", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatalf("Error writing output file: %v", err)
 	}
 	defer output.Close()
 
 	src, _ := jpeg.Decode(input)
-	dst := image.NewGray16(image.Rect(0, 0, width, height))
+	dst := image.NewGray(image.Rect(0, 0, width, height))
 
 	srcBounds := src.Bounds()
 	targetRect := fitRectInto(&srcBounds, &dst.Rect)
 
-	fmt.Printf("targetRect: %v", targetRect)
-
+	draw.Draw(dst, dst.Bounds(), &image.Uniform{color.White}, image.ZP, draw.Src)
 	draw.CatmullRom.Scale(dst, targetRect, src, src.Bounds(), draw.Over, nil)
 
-	// we're taking care of a more efficient output encoding later
-	png.Encode(output, dst)
+	// the actual conversion works by packing two nibbles together in a byte
+	var result = make([]byte, (width*height+1)/2)
+	for i, p := range dst.Pix {
+		res := uint8((uint16(p) + 8) / 16)
+		if i%2 == 0 {
+			result[i/2] = (res << 4)
+		} else {
+			// note that integer division makes sure we're writing at the same
+			// index for odd and even indices
+			result[i/2] = result[i/2] | res
+		}
+	}
+
+	output.Write(result)
 }
