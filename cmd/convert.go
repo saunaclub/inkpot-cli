@@ -7,8 +7,10 @@ package cmd
 import (
 	"image"
 	"image/color"
-	"image/jpeg"
+	_ "image/gif"
+	_ "image/jpeg"
 	_ "image/png"
+	"io"
 	"log"
 	"os"
 
@@ -16,29 +18,65 @@ import (
 	"golang.org/x/image/draw"
 )
 
+var width int
+var height int
+var outfile string
+
+func Foobar () (io.Writer, error) {
+	return os.Stdout, nil
+}
+
 // convertCmd represents the convert command
 var convertCmd = &cobra.Command{
-	Use:   "convert",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "convert <file|->",
+	Short: "Convert a single file to a 4-bit, 16-color grayscale image",
+	Long: `Convert a single file to a 4-bit, 16-color grayscale image.
+Supports jpeg, png and gif files.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Pass "-" as the filename to read from stdin.`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		width, _ := cmd.Flags().GetInt("width")
-		height, _ := cmd.Flags().GetInt("height")
+		var err error
 
-		convertImage(width, height)
+		// read from given file or stdin
+		var input io.Reader
+		if args[0] == "-" {
+			input = os.Stdin
+		} else {
+			input, err := os.Open(args[0])
+			if err != nil {
+				log.Fatalf("Error opening file: %v", err)
+			}
+			defer input.Close()
+		}
+
+	    // write to given outfile, default to stdout
+	    var output io.Writer
+		if outfile == "" {
+			output = os.Stdout
+		} else {
+			file, err := os.OpenFile(outfile, os.O_RDWR|os.O_CREATE, 0644)
+			if err != nil {
+				log.Fatalf("Error writing output file: %v", err)
+			}
+			defer file.Close()
+			output = file
+		}
+
+		result, err := convertImage(input, width, height)
+		if err != nil {
+			log.Fatalf("Could not convert image: %v", err)
+		}
+		output.Write(result)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(convertCmd)
 
-	convertCmd.Flags().Int("width", 540, "Target width")
-	convertCmd.Flags().Int("height", 960, "Target height")
+	convertCmd.Flags().IntVarP(&width, "width", "x", 540, "target width")
+	convertCmd.Flags().IntVarP(&height, "height", "y", 960, "target height")
+	convertCmd.Flags().StringVarP(&outfile, "output", "o", "", "file to write the result to (default stdout)")
 }
 
 // Returns a new Rectangle that is resized and centered in `dst`
@@ -67,22 +105,11 @@ func fitRectInto(src *image.Rectangle, dst *image.Rectangle) image.Rectangle {
 	return image.Rect(targetX, targetY, targetWidth+targetX, targetHeight+targetY)
 }
 
-func convertImage(width int, height int) {
-	// for now, we're reading a predefined input file
-	input, err := os.Open("cat.jpg")
+func convertImage(input io.Reader, width int, height int) ([]byte, error) {
+	src, _, err := image.Decode(input)
 	if err != nil {
-		log.Fatalf("Error opening file: %v", err)
+		return nil, err
 	}
-	defer input.Close()
-
-	// … and writing to a predefined output file
-	output, err := os.OpenFile("cat_resized.epd", os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		log.Fatalf("Error writing output file: %v", err)
-	}
-	defer output.Close()
-
-	src, _ := jpeg.Decode(input)
 	dst := image.NewGray(image.Rect(0, 0, width, height))
 
 	srcBounds := src.Bounds()
@@ -104,5 +131,5 @@ func convertImage(width int, height int) {
 		}
 	}
 
-	output.Write(result)
+	return result, nil
 }
