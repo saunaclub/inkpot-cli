@@ -5,7 +5,6 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 
@@ -109,12 +108,9 @@ func getConvert(c *gin.Context) {
 		c.Error(err)
 	}
 
-	extraHeaders := map[string]string{
-		"X-Image-Width":  fmt.Sprintf("%d", width),
-		"X-Image-height": fmt.Sprintf("%d", height),
-	}
-
-	c.DataFromReader(http.StatusOK, int64(len(converted)), "x-image/inkpot-epd", bytes.NewReader(converted), extraHeaders)
+	c.Header("X-Image-Width", fmt.Sprintf("%d", width))
+	c.Header("X-Image-Height", fmt.Sprintf("%d", height))
+	c.Data(http.StatusOK, "x-image/inkpot-epd", converted)
 }
 
 func putConvert(c *gin.Context) {
@@ -150,12 +146,9 @@ func putConvert(c *gin.Context) {
 		c.Error(err)
 	}
 
-	extraHeaders := map[string]string{
-		"X-Image-Width":  fmt.Sprintf("%d", width),
-		"X-Image-height": fmt.Sprintf("%d", height),
-	}
-
-	c.DataFromReader(http.StatusOK, int64(len(converted)), "x-image/inkpot-epd", bytes.NewReader(converted), extraHeaders)
+	c.Header("X-Image-Width", fmt.Sprintf("%d", width))
+	c.Header("X-Image-Height", fmt.Sprintf("%d", height))
+	c.Data(http.StatusOK, "x-image/inkpot-epd", converted)
 }
 
 func init() {
