@@ -35,11 +35,10 @@ Pass "-" as the filename to read from stdin.`,
 		if args[0] == "-" {
 			input = os.Stdin
 		} else {
-			input, err := os.Open(args[0])
+			input, err = os.Open(args[0])
 			if err != nil {
 				log.Fatalf("Error opening file: %v", err)
 			}
-			defer input.Close()
 		}
 
 		// write to given outfile, default to stdout
