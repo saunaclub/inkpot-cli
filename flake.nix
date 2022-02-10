@@ -12,8 +12,12 @@
       buildInputs = with pkgs; [
         go
         gopls
+        stdenv
+        glibc.static
       ];
-      # LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
+
+      CFLAGS="-I${pkgs.glibc.dev}/include";
+      LDFLAGS="-L${pkgs.glibc}/lib";
     };
   };
 }
