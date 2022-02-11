@@ -8,16 +8,7 @@
     pkgs = nixpkgs.legacyPackages.${system};
     lib = pkgs.lib;
   in {
-    devShell.${system} = pkgs.mkShell rec {
-      buildInputs = with pkgs; [
-        go
-        gopls
-        stdenv
-        glibc.static
-      ];
-
-      CFLAGS="-I${pkgs.glibc.dev}/include";
-      LDFLAGS="-L${pkgs.glibc}/lib";
-    };
+    defaultPackage.${system} = pkgs.callPackage ./default.nix {};
+    devShell.${system} = pkgs.callPackage ./shell.nix {};
   };
 }

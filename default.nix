@@ -1,4 +1,4 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub, stdenv, glibc }:
 
 buildGoModule rec {
   pname = "inkpot-cli";
@@ -6,6 +6,12 @@ buildGoModule rec {
 
   src = ./.;
   vendorSha256 = "sha256-W+oAjjRYXoKM20nubO0y2yUA4WRjOn7zki3pIf9TMvc=";
+
+  buildInputs = [
+    stdenv
+    glibc.static
+  ];
+  ldflags = "-linkmode external -extldflags -static";
 
   meta = with lib; {
     description = "Command-line tool to customize Spotify client";
