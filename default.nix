@@ -14,9 +14,9 @@ buildGoModule rec {
   ldflags = "-linkmode external -extldflags -static";
 
   meta = with lib; {
-    description = "Command-line tool to customize Spotify client";
-    homepage = "https://github.com/khanhas/spicetify-cli/";
+    description = "Command-line tool to generate 4-bit grayscale images";
+    homepage = "https://github.com/saunaclub/inkpot-cli/";
     license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ jonringer ];
+    maintainers = with maintainers; [];
   };
 }
