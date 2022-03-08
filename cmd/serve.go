@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/gzip"
 	"github.com/saunaclub/inkpot-cli/epd"
 	"github.com/spf13/cobra"
 )
@@ -29,6 +30,7 @@ var serveCmd = &cobra.Command{
 	Short: "Run a webserver to convert images via HTTP",
 	Run: func(cmd *cobra.Command, args []string) {
 		router := gin.Default()
+		router.Use(gzip.Gzip(gzip.DefaultCompression))
 		// Set a lower memory limit for multipart forms (default is 32 MiB)
 		router.MaxMultipartMemory = 8 << 20 // 8 MiB
 		router.GET("/", getIndex)
@@ -49,16 +51,18 @@ A webserver to convert GIFs, PNGs and JPEGs to 4-bit grayscale images.
 - GET /convert/[url] can be used to convert a file publically accessible via URL
 
 Both routes accept a "width" and a "height" parameter to configure the output size.
+If you want the response to be gzip encoded, just set the Accept-Encoding header.
 
 ## Examples
 
-Via curl:
+Via curl, with GZIP compression:
 
 curl -X POST http://localhost:8080/convert \
   -F "file=@my_cat.jpeg" \
   -H "Content-Type: multipart/form-data"
+  -H "Accept-Encoding: gzip"
 
-Via httpie:
+Via httpie (which will request a GZIP compressed image by default):
 
 http --form POST :8080/convert file@my_cat.jpg
 `

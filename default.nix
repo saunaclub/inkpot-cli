@@ -5,7 +5,7 @@ buildGoModule rec {
   version = "0.0.1";
 
   src = ./.;
-  vendorSha256 = "sha256-W+oAjjRYXoKM20nubO0y2yUA4WRjOn7zki3pIf9TMvc=";
+  vendorSha256 = "sha256-+NV7tsw76n4PIYjeSU9SqyzMdv7OoRJA1TANqhJcR9I=";
 
   buildInputs = [
     stdenv

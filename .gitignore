@@ -1,6 +1,7 @@
 /result
 /inkpot-cli
 *.epd
+*.gz
 *.jpg
 *.jpeg
 *.png
