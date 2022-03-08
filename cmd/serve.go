@@ -33,7 +33,7 @@ var serveCmd = &cobra.Command{
 		router.MaxMultipartMemory = 8 << 20 // 8 MiB
 		router.GET("/", getIndex)
 		router.GET("/convert", getConvert)
-		router.PUT("/convert", putConvert)
+		router.POST("/convert", postConvert)
 		router.Run(fmt.Sprintf(":%d", port))
 	},
 }
@@ -45,7 +45,7 @@ A webserver to convert GIFs, PNGs and JPEGs to 4-bit grayscale images.
 
 ## Routes
 
-- PUT /convert can be used to convert a file on your filesystem
+- POST /convert can be used to convert a file on your filesystem
 - GET /convert/[url] can be used to convert a file publically accessible via URL
 
 Both routes accept a "width" and a "height" parameter to configure the output size.
@@ -54,13 +54,13 @@ Both routes accept a "width" and a "height" parameter to configure the output si
 
 Via curl:
 
-curl -X PUT http://localhost:8080/convert \
+curl -X POST http://localhost:8080/convert \
   -F "file=@my_cat.jpeg" \
   -H "Content-Type: multipart/form-data"
 
 Via httpie:
 
-http --form PUT :8080/convert file@my_cat.jpg
+http --form POST :8080/convert file@my_cat.jpg
 `
 
 	c.String(http.StatusOK, usage)
@@ -113,7 +113,7 @@ func getConvert(c *gin.Context) {
 	c.Data(http.StatusOK, "x-image/inkpot-epd", converted)
 }
 
-func putConvert(c *gin.Context) {
+func postConvert(c *gin.Context) {
 	var params Params
 	err := c.ShouldBindQuery(&params)
 	if err != nil {
