@@ -63,7 +63,7 @@ func ConvertImage(input *io.Reader, width int, height int) ([]byte, error) {
 	// the actual conversion works by packing two nibbles together in a byte
 	var result = make([]byte, (width*height+1)/2)
 	for i, p := range dst.Pix {
-		res := uint8((uint16(p) + 8) / 16)
+		res := p / 16
 		if i%2 == 0 {
 			res = res << 4
 		}
