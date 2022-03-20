@@ -48,7 +48,7 @@ A webserver to convert GIFs, PNGs and JPEGs to 4-bit grayscale images.
 ## Routes
 
 - POST /convert can be used to convert a file on your filesystem
-- GET /convert/[url] can be used to convert a file publically accessible via URL
+- GET /convert?url=[url] can be used to convert a file publically accessible via URL
 
 Both routes accept a "width" and a "height" parameter to configure the output size.
 If you want the response to be gzip encoded, just set the Accept-Encoding header.
