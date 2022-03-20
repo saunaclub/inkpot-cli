@@ -1,6 +1,7 @@
 package epd
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	_ "image/gif"
@@ -40,8 +41,8 @@ func fitRectInto(src *image.Rectangle, dst *image.Rectangle) image.Rectangle {
 // Converts a GIF, JPEG or PNG into a 16-color grayscale image. A single pixel
 // is represented by 4 bits and each byte holds two pixels. The final 4-bits of
 // the last byte may be discarded if width * height is odd.
-func ConvertImage(input io.Reader, width int, height int) ([]byte, error) {
-	src, _, err := image.Decode(input)
+func ConvertImage(input *io.Reader, width int, height int) ([]byte, error) {
+	src, _, err := image.Decode(*input)
 	if err != nil {
 		return nil, err
 	}
@@ -53,18 +54,21 @@ func ConvertImage(input io.Reader, width int, height int) ([]byte, error) {
 	draw.Draw(dst, dst.Bounds(), &image.Uniform{color.White}, image.ZP, draw.Src)
 	draw.CatmullRom.Scale(dst, targetRect, src, src.Bounds(), draw.Over, nil)
 
+	// we prepend information that is required to decode the image correctly in a
+  // header of ascii key-value pairs, separated by a colon and a space, one per
+  // line. the header ends with two consecutive newlines.
+	headerString := fmt.Sprintf("width: %d\nheight: %d\n\n", width, height) // remember to strconv.QuoteToASCII(headerString) if necessary
+	header := []byte(headerString)
+
 	// the actual conversion works by packing two nibbles together in a byte
 	var result = make([]byte, (width*height+1)/2)
 	for i, p := range dst.Pix {
 		res := uint8((uint16(p) + 8) / 16)
 		if i%2 == 0 {
-			result[i/2] = (res << 4)
-		} else {
-			// note that integer division makes sure we're writing at the same
-			// index for odd and even indices
-			result[i/2] |= res
+			res = res << 4
 		}
+		result[i/2] |= res
 	}
 
-	return result, nil
+	return append(header, result...), nil
 }

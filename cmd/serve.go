@@ -6,10 +6,11 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/gzip"
+	"github.com/gin-gonic/gin"
 	"github.com/saunaclub/inkpot-cli/epd"
 	"github.com/spf13/cobra"
 )
@@ -47,8 +48,8 @@ A webserver to convert GIFs, PNGs and JPEGs to 4-bit grayscale images.
 
 ## Routes
 
-- POST /convert can be used to convert a file on your filesystem
-- GET /convert?url=[url] can be used to convert a file publically accessible via URL
+- PUT /convert can be used to convert a file on your filesystem
+- GET /convert takes a "url" parameter that can be used to convert a file publically accessible via http
 
 Both routes accept a "width" and a "height" parameter to configure the output size.
 If you want the response to be gzip encoded, just set the Accept-Encoding header.
@@ -107,7 +108,8 @@ func getConvert(c *gin.Context) {
 	reader := response.Body
 	defer reader.Close()
 
-	converted, err := epd.ConvertImage(reader, width, height)
+	r := io.Reader(reader)
+	converted, err := epd.ConvertImage(&r, width, height)
 	if err != nil {
 		c.Error(err)
 	}
@@ -138,14 +140,13 @@ func postConvert(c *gin.Context) {
 	if err != nil {
 		c.Error(err)
 	}
-
 	reader, err := file.Open()
 	if err != nil {
 		c.Error(err)
 	}
-	defer reader.Close()
 
-	converted, err := epd.ConvertImage(reader, width, height)
+	r := io.Reader(reader)
+	converted, err := epd.ConvertImage(&r, width, height)
 	if err != nil {
 		c.Error(err)
 	}

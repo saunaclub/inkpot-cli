@@ -54,7 +54,7 @@ Pass "-" as the filename to read from stdin.`,
 			output = file
 		}
 
-		result, err := epd.ConvertImage(input, width, height)
+		result, err := epd.ConvertImage(&input, width, height)
 		if err != nil {
 			log.Fatalf("Could not convert image: %v", err)
 		}
