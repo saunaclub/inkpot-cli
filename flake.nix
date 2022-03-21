@@ -1,5 +1,5 @@
 {
-  description = "Frittenbude Exploration Stuff";
+  description = "Inkpot Command Line Interface";
   inputs.nixpkgs.url = github:NixOS/nixpkgs;
 
   outputs = { self, nixpkgs }:
